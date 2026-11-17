@@ -65,6 +65,9 @@ fn app_version() -> &'static str {
 fn main() {
     let app = tauri::Builder::default()
         .manage(Hub(Mutex::new(None)))
+        // Signed updates from GitHub Releases (latest.json); the page shows the button and relaunches.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![app_version])
         .setup(|app| {
             let child = start_hub(app)?;

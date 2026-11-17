@@ -217,6 +217,39 @@ function morphKids(a, b) {
   while (a.childNodes.length > bn.length) a.lastChild.remove();
 }
 
+/* Desktop build only: a signed update on GitHub Releases puts an Update button next to the bell.
+   Checked shortly after start and every 6 hours; no update, no button. */
+const UPD = { info: null, busy: false, armed: 0 };
+async function updateCheck() {
+  const up = globalThis.__TAURI__?.updater;
+  if (!up || UPD.busy) return;
+  try { UPD.info = (await up.check()) || null; } catch { UPD.info = null; }   // offline or no release yet: stay quiet
+  renderTitlebar();
+}
+setTimeout(updateCheck, 5000);
+setInterval(updateCheck, 6 * 3600 * 1000);
+async function installUpdate() {
+  if (!UPD.info || UPD.busy) return;
+  /* The install restarts the app, and the hub's running agents stop with it: a second click confirms. */
+  const live = (DB.sessions || []).filter((s) => ['running', 'waiting'].includes(s.status)).length;
+  if (live && Date.now() - UPD.armed > 6000) {
+    UPD.armed = Date.now();
+    toast(`${live} session${live > 1 ? 's are' : ' is'} still running and will stop. Click Update again to install`, 'warning');
+    return;
+  }
+  UPD.busy = true; renderTitlebar();
+  let got = 0, total = 0;
+  try {
+    await UPD.info.downloadAndInstall((e) => {
+      if (e.event === 'Started') total = e.data.contentLength || 0;
+      if (e.event === 'Progressed') { got += e.data.chunkLength; const l = document.getElementById('upd-label'); if (l && total) l.textContent = `Updating ${Math.round(got / total * 100)}%`; }
+    });
+    await globalThis.__TAURI__.process.relaunch();
+  } catch (err) {
+    UPD.busy = false; renderTitlebar();
+    toast(`Update failed: ${err.message || err}`, 'warning');
+  }
+}
 function renderTitlebar() {
   const page = state.page;
   const isSession = page === 'session';
@@ -239,6 +272,7 @@ function renderTitlebar() {
     </button>
     <button class="tb-goa ${prefs.goaMode ? 'on' : ''}" data-act="goa-mode" aria-pressed="${!!prefs.goaMode}" title="${prefs.goaMode ? 'Leave GOA mode' : 'Enter GOA mode'}">${ic(prefs.goaMode ? 'sign-out' : 'crown-simple', 'bold')}<span>${prefs.goaMode ? 'Exit GOA' : 'GOA'}</span></button>
     <div class="spacer"></div>
+    ${UPD.info ? `<button class="btn-update" data-act="install-update" title="XBLabs ${esc(UPD.info.version)} is out. Install it and restart the app">${ic(UPD.busy ? 'circle-notch' : 'arrow-circle-down', 'bold')}<span id="upd-label">${UPD.busy ? 'Updating…' : `Update ${esc(UPD.info.version)}`}</span></button>` : ''}
     <button class="btn secondary${small} icon-only tb-notif" data-act="notifs" title="Notifications" aria-label="Notifications">${ic('bell')}<i class="tb-notif-dot" hidden></i></button>
     <button class="tb-search${small} icon-only" data-act="search" title="Search everything" aria-label="Search everything">${ic('magnifying-glass')}</button>
     <button class="btn secondary${small} icon-only" data-act="commands" title="Quick commands · Ctrl J" aria-label="Quick commands">${ic('lightning')}</button>
@@ -5397,6 +5431,7 @@ document.addEventListener('click', (e) => {
       break;
     }
     case 'privacy': prefs.privacy = !prefs.privacy; savePrefs(); applyPrefs(); render(); toast(prefs.privacy ? 'Privacy mode on: sensitive data blurred' : 'Privacy mode off'); break;
+    case 'install-update': installUpdate(); break;
     case 'notifs': if (!popover.hidden && popover.classList.contains('pop-notif')) popover.hidden = true; else popNotifs(t); break;
     case 'town-open': TOWN.focus = t.dataset.id; state.page = 'town'; render(); break;
     case 'town-close': TOWN.focus = null; render(); break;

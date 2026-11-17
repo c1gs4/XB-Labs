@@ -71,7 +71,10 @@ button { background: none; border: 0; cursor: pointer; padding: 0; }
   border-radius: var(--radius-sm); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   -webkit-app-region: no-drag; font-size: 10px; font-weight: 500; color: var(--accent);
 }
-.btn-update .icon { font-size: 11px; }
+.btn-update .icon { font-size: 12px; }
+.btn-update { font-size: 11.5px; cursor: pointer; }
+.btn-update:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.btn-update .ph-circle-notch { animation: spin 900ms linear infinite; }
 
 /* macOS traffic lights: close, minimize, zoom on the left; glyphs show while the group is hovered. */
 .wincontrols { display: flex; gap: 8px; margin-right: 6px; -webkit-app-region: no-drag; }

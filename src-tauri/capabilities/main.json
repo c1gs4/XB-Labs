@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "The hub page in the main window: window chrome (min, max, close, drag) and native zoom for UI scale. Only the local hub origin.",
+  "description": "The hub page in the main window: window chrome (min, max, close, drag), native zoom for UI scale, and installing a signed update. Only the local hub origin.",
   "windows": ["main"],
   "remote": { "urls": ["http://127.0.0.1:*"] },
   "permissions": [
@@ -13,6 +13,8 @@
     "core:window:allow-is-maximized",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
-    "core:webview:allow-set-webview-zoom"
+    "core:webview:allow-set-webview-zoom",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

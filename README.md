@@ -102,6 +102,21 @@ npm install
 npm run tauri:build      # src-tauri/prep.mjs gathers node + server + app, then builds the NSIS installer
 ```
 
+### Releases and in-app updates
+
+The app checks `releases/latest/download/latest.json` on GitHub every few hours. When a newer
+signed build is published, an **Update** button appears next to the bell. One click downloads the
+installer, checks its signature, installs it and restarts the app.
+
+```bash
+# once: npx tauri signer generate -w ~/.tauri/xblabs-updater.key   (keep the key out of the repo)
+TAURI_SIGNING_PRIVATE_KEY=~/.tauri/xblabs-updater.key npm run tauri:build
+node src-tauri/release.mjs "What changed"    # writes bundle/latest.json
+```
+
+Then upload `bundle/nsis/XBLabs_<version>_x64-setup.exe` and `bundle/latest.json` to a GitHub
+release tagged `v<version>`.
+
 ## Configuration
 
 | Variable | Default | What it does |
