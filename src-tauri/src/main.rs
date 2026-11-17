@@ -3,7 +3,7 @@
 
 //! The desktop shell is a window onto the hub. On start it runs the bundled hub (runtime/node.exe
 //! + runtime/server/index.mjs) with its database in the app's data folder, waits for the port, then
-//! opens the window on it. A hub already listening on the port (a dev hub) is used as is.
+//! opens the window on it. A hub already on that port (another copy of the app) is used as is.
 //! Closing the app stops the hub it started, with every process under it.
 
 use std::net::TcpStream;
@@ -17,7 +17,8 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 const NO_WINDOW: u32 = 0x0800_0000;
 
-const PORT: u16 = 5200;
+/// Its own port, so a dev hub (`npm run dev`, 5200) and the app run side by side with separate data.
+const PORT: u16 = 5210;
 
 struct Hub(Mutex<Option<Child>>);
 

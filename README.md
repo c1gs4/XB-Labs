@@ -91,7 +91,8 @@ The shell in `src-tauri/` starts the bundled hub, waits for it, then opens a fra
 it.
 
 - The packaged hub keeps its database in the app's data folder.
-- If a hub is already listening on port 5200, the app uses that one instead.
+- The app's hub listens on port 5210, so it runs alongside a dev hub on 5200. Agents on other
+  machines attach to the hub whose install line they used.
 - Closing the app stops the hub it started.
 
 ```bash
