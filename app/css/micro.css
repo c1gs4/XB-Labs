@@ -1,0 +1,481 @@
+/* XBLabs — sidebar, micro-interactions and motion.
+   One easing, three durations: 140ms feedback, 220ms moves, 320ms entrances. */
+:root { --t-fast: 140ms; --t-move: 220ms; --t-enter: 320ms; --ease-out: cubic-bezier(.16, 1, .3, 1); --spring: linear(0, .009, .035 2.1%, .141, .281 6.7%, .723 12.9%, .938 16.7%, 1.017, 1.077 20.3%, 1.104 22.1%, 1.115, 1.114 25.3%, 1.096 27.8%, 1.023 34.8%, .999 38.3%, .987 41.3%, .985 45.4%, 1 58.5%, 1.003 70.3%, 1); --spring-soft: linear(0, .02 1.7%, .089 3.9%, .345 9.6%, .645 16%, .835 21.6%, .945 27.3%, 1.003 33.4%, 1.026 40%, 1.025 47.6%, 1.006 63.2%, 1); --t-spring: 520ms; }
+
+/* ================= floating sidebar =================
+   An inset panel: rounded, lifted off the window edge, one filled pill
+   for the active page. */
+.sidebar {
+  margin: 8px 0 8px 8px; height: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);
+  background: var(--surface-1); padding: 10px; transition: width var(--t-move) var(--ease);
+}
+/* Hide/show is a small tab on the panel's right edge. The slot is a zero-width flex item right
+   after the sidebar, so the tab follows the edge through the width transition. */
+.sb-notch-slot { flex: none; width: 0; position: relative; z-index: 5; }
+.sb-notch {
+  position: absolute; left: -1px; top: 50%; translate: 0 -50%; width: 14px; height: 44px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-1); border: 1px solid var(--border-subtle); border-left: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0; color: var(--text-tertiary);
+  transition: width var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.sb-notch:hover { width: 18px; color: var(--text-primary); background: var(--surface-2); }
+.sb-notch:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sb-notch .icon { font-size: 10px; transition: rotate var(--t-move) var(--ease); }
+.sidebar.collapsed + .sb-notch-slot .icon { rotate: 180deg; }
+.sidebar .ws-switch { background: none; border: 0; padding: 4px 4px 0; height: 52px; }
+.profile { border-top: 0; border-radius: var(--radius-lg); background: var(--surface-2); }
+.profile:hover { background: var(--surface-3); }
+
+.nav-list { position: relative; display: flex; flex-direction: column; gap: 2px; }
+.nav-ind {
+  position: absolute; left: 0; right: 0; top: 0; height: 36px; z-index: 0; pointer-events: none;
+  border-radius: var(--nav-radius, var(--radius-lg)); background: var(--text-primary);
+  transition: transform var(--t-move) var(--spring), opacity var(--t-fast) var(--ease); opacity: 0;
+}
+.navitem { position: relative; z-index: 1; height: 36px; padding: 0 12px; border-radius: var(--nav-radius, var(--radius-lg)); }
+.navitem:hover { background: var(--surface-2); }
+.navitem.active, .navitem.active:hover { background: none; color: var(--bg-base); font-weight: 600; }
+.navitem.active .icon, .navitem.active .s-count { color: var(--bg-base); }
+.navitem .s-count { transition: color var(--t-fast) var(--ease); }
+.navitem, .navitem .icon { transition: color var(--t-move) var(--ease), background var(--t-fast) var(--ease); }
+:root[data-glass] .navitem.active, :root[data-glass] .navitem.active .icon, :root[data-glass] .navitem.active .s-count { color: var(--_bg); }
+[data-theme="aubergine"] { --nav-radius: 999px; }
+[data-theme="lime"] { --nav-radius: 10px; }
+[data-theme="paper"] { --nav-radius: 3px; }
+.sidebar.collapsed .nav-ind { left: 4px; right: 4px; }
+
+/* ================= branched workspaces =================
+   Each project is a section on a trunk; sessions hang off curved branches. The trunk sits under
+   the caret (x = 15px), rows start at 30px, every branch ends with a 10px curve. The accent
+   trace runs down the trunk to the open session and out along its branch. */
+.br-sec { --row: 30px; --trunk: 15px; --indent: 30px; --line: var(--border-strong); --lw: 1.5px; }
+/* Project rows open and close like a folder: the glyph swaps between folder and folder-open. */
+.ws-row .br-caret { font-size: 14px; color: var(--text-tertiary); }
+.br-sec.open .br-caret { color: var(--text-secondary); }
+.br-kids { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 0fr; transition: grid-template-rows var(--t-enter) var(--ease); }
+.br-sec.open .br-kids { grid-template-rows: 1fr; }
+.br-kids-in { min-height: 0; overflow: hidden; padding-top: 2px; }
+.br-sec.open .br-kids-in { overflow: visible; }
+.br-empty { padding: 6px 0 8px var(--indent); font-size: 11px; color: var(--text-disabled); }
+
+.br-row { position: relative; height: var(--row); }
+.br-row::before, .br-row::after {
+  content: ""; position: absolute; left: var(--trunk); top: calc(var(--row) / -2); width: calc(var(--indent) - var(--trunk) - 4px);
+  height: var(--row); border-bottom-left-radius: 10px; pointer-events: none;
+}
+.br-row::before { border-left: var(--lw) solid var(--line); border-bottom: var(--lw) solid var(--line); }
+/* A main row after sub rows: its line climbs past them to the row above. */
+.br-row[style*="--up"]::before, .br-row[style*="--up"]::after { top: calc(var(--row) * -0.5 - var(--row) * var(--up)); height: calc(var(--row) * (1 + var(--up))); }
+.br-row:first-child::before { top: -6px; height: calc(var(--row) / 2 + 6px); }
+.br-row:first-child::after { top: -6px; height: calc(var(--row) / 2 + 6px); }
+.br-row.pass::after { border-left: var(--lw) solid var(--accent); border-bottom-left-radius: 0; width: 0; }
+.br-row.act::after { border-left: var(--lw) solid var(--accent); border-bottom: var(--lw) solid var(--accent); }
+.br-row.draw::after { animation: br-draw 400ms var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.br-row.pass.draw::after { animation-name: br-draw-v; }
+@keyframes br-draw { from { clip-path: inset(0 100% 100% 0); } 55% { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes br-draw-v { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+.br-sec.unfold .br-row { animation: br-in var(--t-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+@keyframes br-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.br-row .swipe-face { margin-left: var(--indent); }
+/* The face only needs a fill to cover the actions while swiped; at rest the sidebar tint shows. */
+.br-row:not(.dragging):not(.open) .swipe-face { background: transparent; }
+.br-main {
+  flex: 1; min-width: 0; height: 26px; display: flex; align-items: center; gap: 7px; padding: 0 8px;
+  border-radius: var(--radius-md); font-size: 12px; color: var(--text-tertiary); text-align: left;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.br-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.br-main:hover { color: var(--text-primary); background: var(--surface-2); }
+.br-row.act .br-main { color: var(--text-primary); background: var(--surface-2); font-weight: 500; }  /* same fill as the active "All" row */
+/* A session GOA spawned sits one step right of the head that started it, its line too;
+   sessions I made myself stay on the first step. */
+.br-row.sub { --trunk: 40px; --indent: 56px; }   /* trunk centred on the parent row's dot (40.5px) */
+/* The first sub line starts under the dot of the row above, not through it. */
+.br-row:not(.sub) + .br-row.sub::before, .br-row:not(.sub) + .br-row.sub::after { top: calc(var(--row) / -2 + 7px); height: calc(var(--row) / 2 - 7px + var(--row) / 2); }
+.br-main .br-tag .icon { font-size: 10px; margin-right: 3px; vertical-align: -1px; }
+.br-main .br-tag { margin-left: auto; flex: none; font-style: normal; font-size: 10px; line-height: 14px; padding: 0 5px; border-radius: 4px; color: var(--text-tertiary); background: var(--surface-2); }
+.br-main .br-ag { margin-left: auto; flex: none; display: grid; place-items: center; color: var(--text-tertiary); }
+.br-main .br-tag + .br-ag { margin-left: 6px; }
+.br-row:not(.sub) .br-tag { color: var(--accent); }
+.br-row .ws-menu { opacity: 0; }
+.br-row:hover .ws-menu, .br-row .ws-menu:focus-visible { opacity: 1; }
+.br-sec .ws-item .ws-row { padding-top: 5px; padding-bottom: 5px; }
+
+/* ================= swipe row ================= */
+.swipe { position: relative; overflow: visible; }
+.swipe-face {
+  position: relative; z-index: 1; display: flex; align-items: center; height: 100%;
+  background: var(--surface-1); border-radius: var(--radius-md); touch-action: pan-y;
+  transition: transform var(--t-move) var(--spring);
+}
+.swipe.dragging .swipe-face { transition: none; cursor: grabbing; }
+.swipe-actions {
+  position: absolute; top: 2px; bottom: 2px; right: 0; display: flex; align-items: center; gap: 4px; padding-right: 2px;
+  opacity: 0; transition: opacity var(--t-fast) var(--ease);
+}
+.swipe.dragging .swipe-actions, .swipe.open .swipe-actions { opacity: 1; }
+.sw-act {
+  width: 28px; height: 100%; max-height: 28px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+  background: var(--surface-3); color: var(--text-secondary); transition: background var(--t-fast) var(--ease), width var(--t-move) var(--ease);
+}
+.sw-act .icon { font-size: 14px; }
+.sw-act:hover { color: var(--text-primary); }
+.sw-act.danger { background: var(--danger-soft); color: var(--danger); }
+.swipe.commit .sw-act:not(.danger) { width: 0; opacity: 0; overflow: hidden; }
+.swipe.commit .sw-act.danger { width: 64px; background: var(--danger); color: #fff; }
+.swipe.leaving { animation: row-out 240ms var(--ease) forwards; }
+@keyframes row-out { to { height: 0; opacity: 0; margin: 0; } }
+
+/* Sessions list view: the same swipe rows, grouped by project. */
+.slist { padding: 6px 10px 10px; display: flex; flex-direction: column; }
+.slist-group { display: flex; align-items: center; gap: 8px; padding: 12px 6px 6px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
+.slist-group i { width: 6px; height: 6px; border-radius: 2px; }
+.slist-group .cnt { font: 400 11px/1 var(--font-mono); color: var(--text-disabled); }
+.slist-row { height: 40px; animation: row-in var(--t-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 20ms); }
+.slist-main { flex: 1; min-width: 0; height: 36px; display: grid; grid-template-columns: 10px 1fr 120px 80px 64px; align-items: center; gap: 10px; padding: 0 10px; border-radius: var(--radius-md); text-align: left; font-size: 13px; }
+.slist-main:hover { background: var(--surface-2); }
+.slist-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slist-meta { font-size: 11.5px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slist-meta.num { text-align: right; font-family: var(--font-mono); }
+.slist-row .swipe-face { background: var(--surface-1); }
+.bempty { padding: 10px; font-size: 11.5px; color: var(--text-tertiary); }
+.bcard { animation: row-in var(--t-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
+.bcard:active { transform: scale(.985); }
+@keyframes row-in { from { opacity: 0; transform: translateY(10px) scale(.98); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* ================= glide select ================= */
+.glide {
+  position: fixed; z-index: 120; padding: 4px; border-radius: var(--radius-lg);
+  background: var(--surface-1); border: 1px solid var(--border); box-shadow: var(--shadow-pop);
+  opacity: 0; transform: scale(.88) translateY(-4px); filter: blur(6px); transform-origin: top center;
+  transition: opacity 160ms var(--ease), filter 220ms var(--ease-out), transform var(--t-spring) var(--spring);
+}
+.glide.in { opacity: 1; transform: none; filter: none; }
+.glide.leaving { opacity: 0; transform: scale(.94); transition-duration: 120ms; }
+.glide[hidden] { display: none; }
+.glide.scroll { max-height: min(320px, 50vh); overflow-y: auto; overscroll-behavior: contain; }
+.glide-pill {
+  position: absolute; left: 4px; right: 4px; top: 0; height: 30px; z-index: 0; pointer-events: none;
+  border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-3);
+  transition: transform var(--t-move) var(--ease), height var(--t-move) var(--ease), opacity var(--t-fast) var(--ease);
+}
+.glide-pill.rest { opacity: .6; }
+.glide-row {
+  position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px;
+  border-radius: calc(var(--radius-lg) - 4px); font-size: 12.5px; color: var(--text-secondary); cursor: pointer; user-select: none;
+  transition: color var(--t-fast) var(--ease);
+}
+.glide-row.hot, .glide-row.sel { color: var(--text-primary); }
+.glide-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.glide-tag { font: 400 11px/1 var(--font-mono); color: var(--text-tertiary); }
+.glide-check { font-size: 12px; color: var(--accent); }
+.select[aria-expanded="true"] { border-color: var(--accent); }
+.select .icon { transition: transform var(--t-move) var(--ease); }
+.select[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.glide-chip { height: 30px; min-width: 0; justify-content: space-between; font-size: 12px; }
+.glide-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ================= swipe toast ================= */
+.toast-wrap {
+  /* Bottom-right corner, newest at the bottom; toasts line up on their right edge. */
+  position: fixed; right: 20px; bottom: 20px; z-index: 130;
+  display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none;
+}
+.toast {
+  position: relative; overflow: hidden; pointer-events: auto; touch-action: none; cursor: grab;
+  display: flex; align-items: center; gap: 10px; min-width: 260px; max-width: 440px; padding: 10px 12px 12px 14px;
+  border-radius: var(--radius-lg); background: var(--surface-2); border: 1px solid var(--border);
+  box-shadow: var(--shadow-pop); font-size: 12.5px; color: var(--text-primary);
+  animation: toast-in var(--t-spring) var(--spring) both;
+  transition: transform var(--t-move) var(--ease), opacity var(--t-move) var(--ease);
+}
+.toast:active { cursor: grabbing; }
+.toast > .icon { font-size: 15px; color: var(--success); }
+.toast-text { flex: 1; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-height: 1.45; overflow-wrap: anywhere; }
+/* Kind: a tinted card, a coloured edge, icon and fuse in the same colour. */
+.toast { --tone: var(--accent); align-items: flex-start; box-shadow: inset 3px 0 0 var(--tone), var(--shadow-pop);
+  border-color: color-mix(in srgb, var(--tone) 40%, var(--border)); background: color-mix(in srgb, var(--tone) 9%, var(--surface-2)); }
+.toast.ok { --tone: var(--success); }
+.toast.err { --tone: var(--danger); }
+.toast > .icon { color: var(--tone); margin-top: 1px; }
+.toast .toast-fuse { background: var(--tone); }
+.toast-act { height: 24px; padding: 0 10px; border-radius: var(--radius-md); background: var(--surface-3); font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.toast-act:hover { background: var(--text-primary); color: var(--bg-base); }
+.toast-fuse {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform-origin: left;
+  animation: toast-fuse linear forwards;
+}
+.toast.out { animation: toast-out 200ms var(--ease) forwards; }
+.toast.out-swipe { transform: translateY(80px) !important; opacity: 0 !important; }
+@keyframes toast-in { from { opacity: 0; transform: translate(40px, 12px) scale(.86) rotate(2deg); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes toast-out { to { opacity: 0; transform: translateX(48px) scale(.92); filter: blur(6px); } }
+@keyframes toast-fuse { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ================= motion across actions ================= */
+/* Page change (only on navigation, never on poll re-renders): the page slides in from the left,
+   the title rises letter by letter out of a mask, and blocks lift in one after another in
+   document order (--ci, set by pageEnter in micro.js). Same choreography as Kindra's routes. */
+.content.enter { animation: page-in 700ms var(--ease-out) both; }
+/* Movement only, no fade: fading cards in from the page colour read as their background
+   blinking on every page switch. */
+@keyframes page-in { from { transform: translateX(-16px); } to { transform: none; } }
+.content.enter :is(.page-head, .ov-actions, .ov-search, .ov-hero, .ov-quick, .stat, .card, .toolbar, .board, .split > :not(:has(.card, .stat))) {
+  animation: block-in 820ms var(--ease-out) both; animation-delay: calc(90ms + var(--ci, 0) * 55ms);
+}
+@keyframes block-in { from { transform: translateY(26px) scale(.985); } to { transform: none; } }
+.title-row h1 { overflow: clip; overflow-clip-margin: 0 0 .12em; }
+.ch { display: inline-block; }
+.content.enter .ch { animation: ch-in 900ms var(--ease-out) both; animation-delay: calc(120ms + var(--c, 0) * 22ms); }
+@keyframes ch-in { from { transform: translateY(115%) rotate(6deg); } to { transform: none; } }
+/* First load only (the containers persist across renders): title bar drops in, sidebar slides. */
+#titlebar { animation: tb-in 900ms var(--ease-out) both; }
+#sidebar { animation: sb-in 900ms var(--ease-out) 60ms both; }
+@keyframes tb-in { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: none; } }
+@keyframes sb-in { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: none; } }
+/* Dialogs and popovers grow from slightly smaller; the backdrop fades. */
+.overlay:not([hidden]) { animation: fade-in var(--t-move) var(--ease) both; }
+.overlay:not([hidden]) > .modal { animation: modal-in var(--t-spring) var(--spring) both; }
+.popover:not([hidden]) { animation: modal-in 440ms var(--spring) both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { 0% { opacity: 0; transform: translateY(18px) scale(.9); filter: blur(10px); } 40% { opacity: 1; filter: none; } 100% { opacity: 1; transform: none; filter: none; } }
+/* Presses and toggles. */
+.btn, .chip, .picker, .theme-tile, .theme-card, .snav, .segment button, .select {
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.btn, .chip, .picker, .theme-tile, .theme-card, .select { transition-property: background, color, border-color, transform, box-shadow; transition-duration: var(--t-fast), var(--t-fast), var(--t-fast), var(--t-spring), var(--t-fast); transition-timing-function: var(--ease), var(--ease), var(--ease), var(--spring), var(--ease); }
+.btn:active:not([disabled]), .chip:active, .picker:active, .theme-tile:active, .theme-card:active, .select:active { transform: scale(.94); transition-duration: 80ms; transition-timing-function: var(--ease); }
+.theme-tile:hover, .theme-card:hover { transform: translateY(-2px); }
+.toggle::after { transition: transform var(--t-move) var(--spring) !important; }
+.stat, .card { transition: border-color var(--t-fast) var(--ease); }
+/* Charts play after their card has landed (--ci is inherited from the card, --b is the bar index):
+   bars grow from the baseline one after another, the value label pops on top, the line chart
+   draws left to right and its axis labels fade in. */
+.bar-col .stack {
+  animation: bar-up 1000ms var(--ease-out) both; transform-origin: bottom;
+  animation-delay: calc(350ms + var(--ci, 0) * 55ms + var(--b, 0) * 45ms);
+}
+@keyframes bar-up { from { transform: scaleY(0); opacity: .3; } to { transform: none; opacity: 1; } }
+.content.enter .bar-col .peakval { animation: peak-pop 520ms var(--spring) both; animation-delay: calc(820ms + var(--ci, 0) * 55ms + var(--b, 0) * 45ms); }
+@keyframes peak-pop { from { opacity: 0; transform: translateY(8px) scale(.7); } to { opacity: 1; transform: none; } }
+.content.enter .u-plot path { animation: line-draw 1400ms var(--ease-out) both; animation-delay: calc(340ms + var(--ci, 0) * 55ms); }
+@keyframes line-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.content.enter :is(.u-y, .u-x) span { animation: fade-in 600ms var(--ease) both; animation-delay: calc(300ms + var(--ci, 0) * 55ms); }
+.content:not(.enter) .stat, .content:not(.enter) .card, .content:not(.enter) .bar-col .stack, .content:not(.enter) .bcard, .content:not(.enter) .slist-row { animation: none; }
+/* Theme switches cross-fade (View Transitions where the engine has them). */
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: vt-reveal 620ms var(--ease-out) both; }
+@keyframes vt-reveal { from { clip-path: circle(0 at var(--vx, 50%) var(--vy, 50%)); } to { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 50%)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
+}
+:root[data-reduce-motion] *, :root[data-reduce-motion] *::after { animation-delay: 0ms !important; }
+.sidebar.collapsed .br-kids, .sidebar.collapsed .nav-list .s-count { display: none; }
+.modal.stay { animation: none !important; }
+
+/* Liquid Glass: backdrop-filter samples what is behind its backdrop root. An ancestor animating
+   opacity/transform makes the blur render late or not at all until the next repaint, so under
+   glass the animations that wrap blurred panels (page slide, overlay fade) are off.
+   Colour, pill and swipe motion stay. */
+:root[data-glass] .content.enter,
+:root[data-glass] .overlay:not([hidden]), :root[data-glass] .overlay:not([hidden]) > .modal, :root[data-glass] .popover:not([hidden]),
+:root[data-glass] .glide, :root[data-glass] .toast { animation: none !important; }
+/* Each block may move on its own (its blur follows it); only an ancestor moving, the page slide above, makes the blur lag. */
+:root[data-glass] .content.enter .board { animation: none !important; }
+:root[data-glass] .content.enter .board > :is(.bcol, .jcol) { animation: block-in 820ms var(--ease-out) both; }
+:root[data-glass] .content.enter .board > :nth-child(1) { animation-delay: 140ms; }
+:root[data-glass] .content.enter .board > :nth-child(2) { animation-delay: 195ms; }
+:root[data-glass] .content.enter .board > :nth-child(3) { animation-delay: 250ms; }
+:root[data-glass] .content.enter .board > :nth-child(n+4) { animation-delay: 305ms; }
+:root[data-glass] .glide { filter: none !important; }
+:root[data-glass] .glide { transform: none !important; transition: opacity 120ms var(--ease); }
+
+/* Project header as a swipe row: the face carries the header, actions sit behind it. */
+.ws-item.swipe { position: relative; }
+.ws-item.swipe .swipe-face { flex: 1; background: var(--surface-1); border-radius: var(--radius-md); }
+.ws-item.swipe .swipe-face > .ws-row { flex: 1; min-width: 0; }
+.ws-item.swipe .swipe-actions { top: 50%; bottom: auto; height: 30px; transform: translateY(-50%); }
+.sidebar.collapsed .swipe-actions { display: none; }
+
+/* ================= thought line ================= */
+.tline { margin: 2px 0; }
+.tl-head { display: flex; align-items: center; gap: 8px; min-height: 26px; cursor: pointer; color: var(--text-tertiary); font-size: 13px; user-select: none; }
+.tl-head:hover { color: var(--text-secondary); }
+.tl-glyph { display: flex; color: var(--text-tertiary); transition: color var(--t-move) var(--ease), opacity var(--t-move) var(--ease); }
+.tl-glyph .icon { font-size: 13px; }
+.tline.working .tl-glyph { color: var(--accent); animation: tl-breath 1.6s ease-in-out infinite; }
+
+/* ================= lattice loader ================= */
+.lattice { display: inline-grid; grid-template-columns: repeat(3, 4px); gap: 1.5px; flex: none; color: inherit; }
+.lattice i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .15; transition: opacity 240ms var(--ease), background-color 240ms var(--ease); }
+.lattice.working i:not(.hole) { animation: lat-wave 720ms linear infinite; animation-delay: calc(var(--d) * 90ms - 720ms); }
+@keyframes lat-wave { 0% { opacity: 1; } 35%, 100% { opacity: .15; } }
+.lattice.done i.ck { opacity: 1; background: var(--success); }
+.lattice.error i.x { opacity: 1; background: var(--danger); }
+
+/* Recent runs: edge and status label follow the run's state. */
+.tl-marker .dot:has(.lattice), .tl-item:is(.st-done, .st-stop, .st-fail) .tl-marker .dot { background: none; }
+.tl-item.st-done .tl-body { box-shadow: inset 2px 0 0 var(--success); }
+.tl-item.st-stop .tl-body, .tl-item.st-fail .tl-body { box-shadow: inset 2px 0 0 var(--danger); }
+.tl-item.st-done .tl-marker .icon { color: var(--success); font-size: 13px; }
+.tl-item:is(.st-stop, .st-fail) .tl-marker .icon { color: var(--danger); font-size: 12px; }
+.tl-item.st-done .tl-st { color: var(--success); }
+.tl-item.st-stop .tl-st, .tl-item.st-fail .tl-st { color: var(--danger); }
+.tl-item:is(.st-done, .st-stop, .st-fail) .tl-marker::before { top: calc(50% + 9px); }
+
+:root[data-reduce-motion] .lattice.working i:not(.hole) { animation: none; opacity: .6; }
+@keyframes tl-breath { 50% { opacity: .55; transform: scale(.88); } }
+/* Working and settled labels share one cell and crossfade through a 2px blur. */
+.tl-label { display: grid; }
+.tl-work, .tl-done { grid-area: 1 / 1; white-space: nowrap; transition: opacity 350ms var(--ease), filter 350ms var(--ease); }
+.tl-done { opacity: 0; filter: blur(2px); }
+.tline:not(.working) .tl-work { opacity: 0; filter: blur(2px); }
+.tline:not(.working) .tl-done { opacity: 1; filter: none; }
+.tline.working .tl-work {
+  color: transparent; background: linear-gradient(90deg, var(--text-tertiary) 0 35%, var(--text-primary) 50%, var(--text-tertiary) 65% 100%);
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; animation: tl-shimmer 1.8s linear infinite;
+}
+@keyframes tl-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.tl-time { font: 400 11.5px/1 var(--font-mono); color: var(--text-disabled); }
+.tline:not(.working) .tl-time { display: none; }
+.tl-chev { display: flex; transition: rotate var(--t-move) var(--ease); }
+.tl-chev .icon { font-size: 10px; }
+.tline:not(.open) .tl-chev { rotate: -90deg; }
+/* The trace folds into the line: grid rows 1fr → 0fr animates to the content's own height. */
+.tl-steps { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 350ms var(--ease-out), opacity 350ms var(--ease); }
+.tline.open .tl-steps { grid-template-rows: 1fr; opacity: 1; }
+.tl-steps-in { min-height: 0; overflow: hidden; }
+.tl-step { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 3px 0 3px 2px; font-size: 12.5px; line-height: 18px; color: var(--text-tertiary); }
+.tl-step:first-child { margin-top: 4px; }
+.tl-step:not(:last-child)::before { content: ''; position: absolute; left: 7px; top: 21px; bottom: -3px; width: 1px; background: var(--border-subtle); }
+.tl-step span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.tl-tick { flex: none; width: 12px; height: 18px; display: flex; align-items: center; justify-content: center; color: var(--text-disabled); }
+.tl-tick .icon { font-size: 10px; }
+.tl-step.cur { color: var(--text-secondary); animation: row-in var(--t-move) var(--ease-out) both; }
+.tl-step.cur .tl-tick i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: tl-breath 1.6s ease-in-out infinite; }
+
+/* ================= magic bento ================= */
+.bento > .stat, .bento .card { position: relative; overflow: hidden; --glow-x: 50%; --glow-y: 50%; --glow-intensity: 0; }
+/* Border glow: a radial at the cursor, masked down to the 1px border ring. */
+.bento > .stat::after, .bento .card::after {
+  content: ''; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none; z-index: 2;
+  background: radial-gradient(140px circle at var(--glow-x) var(--glow-y),
+    color-mix(in srgb, var(--accent) calc(var(--glow-intensity) * 85%), transparent) 0%,
+    color-mix(in srgb, var(--accent) calc(var(--glow-intensity) * 35%), transparent) 35%, transparent 65%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.bento-spot {
+  position: fixed; left: -200px; top: -200px; width: 400px; height: 400px; border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, color-mix(in srgb, var(--accent) 8%, transparent) 15%,
+    color-mix(in srgb, var(--accent) 4%, transparent) 25%, transparent 70%);
+  mix-blend-mode: screen; opacity: 0; transition: opacity 300ms var(--ease);
+}
+[data-mode="light"] .bento-spot { mix-blend-mode: multiply; }
+.bento-ripple {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent) 0%, color-mix(in srgb, var(--accent) 15%, transparent) 30%, transparent 70%);
+  animation: bento-ripple 800ms var(--ease-out) both;
+}
+@keyframes bento-ripple { from { transform: scale(0); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+
+/* ================= animated list ================= */
+[data-alist] { outline: none; }
+[data-alist]:focus-visible { box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--radius-md); }
+[data-al] { transform: scale(.96) translateY(6px); transition: transform 480ms var(--spring) 60ms, background var(--t-fast) var(--ease); }
+[data-al].al-in { transform: none; }
+[data-al].al-now { transition: none; }
+.tl-item[data-al], .srow[data-al] { border-radius: var(--radius-md); }
+/* Arrow-key selection shows only while the list has keyboard focus, so a row the mouse left does not stay grey. */
+[data-alist]:focus-visible .tl-item.al-sel .tl-body { background: var(--surface-2); }
+.srow.al-sel { box-shadow: inset 0 0 0 1px var(--border); }
+.slist-row.al-sel .slist-main { background: var(--surface-2); }
+/* The swipe rows already scale in here; their own row-in would fight for transform. */
+[data-alist] .slist-row { animation: none; }
+/* Edge fades show only where the list has more to scroll. */
+[data-alist].al-fade-t, [data-alist].al-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 0px)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 0px)), transparent 100%);
+}
+[data-alist].al-fade-t { --ft: 40px; }
+[data-alist].al-fade-b { --fb: 64px; }
+:root[data-reduce-motion] [data-al] { transform: none; opacity: 1; filter: none; transition: background var(--t-fast) var(--ease); }
+
+/* ================= click spark ================= */
+.click-spark { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+/* ================= job run summary ================= */
+.run-sum { display: flex; flex-direction: column; gap: 16px; }
+.rs-head { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.rs-head b { font-weight: 500; }
+.rs-head > .icon { font-size: 18px; color: var(--text-tertiary); }
+.rs-head.ok > .icon { color: var(--success); }
+.rs-head.dg > .icon { color: var(--danger); }
+.rs-head.wn > .icon { color: var(--warning); }
+.rs-head .lattice { color: var(--accent); }
+.rs-sec { display: flex; flex-direction: column; gap: 6px; }
+.rs-sec p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-primary); }
+.rs-sec p.dim { color: var(--text-tertiary); }
+.rs-k { font-size: 11px; color: var(--text-tertiary); }
+.rs-tail { margin: 0; padding: 8px 12px; list-style: none; border-radius: var(--radius-md); background: var(--bg-sunken);
+  font: 400 12px/1.6 var(--font-mono); color: var(--text-secondary); }
+.rs-tail li { white-space: pre-wrap; overflow-wrap: anywhere; }
+.rs-facts { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.rs-facts dt { font-size: 11px; color: var(--text-tertiary); }
+.rs-facts dd { margin: 2px 0 0; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ================= button tooltip ================= */
+/* The rail chip, turned to sit above (or below) a button with its arrow at the button's centre. */
+.btntip { animation: btntip-in 300ms var(--spring) both; }
+.btntip::before { left: var(--arrow-x, 50%); top: auto; bottom: -4px; transform: translateX(-50%) rotate(-45deg); }
+.btntip.below::before { bottom: auto; top: -4px; transform: translateX(-50%) rotate(135deg); }
+@keyframes btntip-in { from { opacity: 0; transform: translateY(6px) scale(.85); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+.btntip.below { animation-name: btntip-in-b; }
+@keyframes btntip-in-b { from { opacity: 0; transform: translateY(-6px) scale(.85); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* ================= model catalog (Settings → Models & keys) ================= */
+.mcat-head { display: flex; align-items: flex-end; gap: 4px; margin: 22px 0 8px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.mcat-title { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.mcat-title b { font-size: 13px; font-weight: 500; }
+.mcat-title small { font-size: 11.5px; color: var(--text-tertiary); }
+.mcat-list { display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+.mcat-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 28px 28px 28px; align-items: center; gap: 6px; }
+.mcat-row .input { height: 32px; }
+.mcat-row input { width: 100%; min-width: 0; }
+.mcat-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); color: var(--text-tertiary); }
+.mcat-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+.mcat-btn.on { color: var(--accent); }
+.mcat-empty { padding: 10px; font-size: 11.5px; }
+.mcat-add { margin-top: 8px; align-self: flex-start; }
+
+/* Injected env list (Settings → Models & keys): label column, then the names as mono chips. */
+.llm-status { font-size: 11.5px; margin-top: 6px; }
+.llm-status:empty { display: none; }
+.llm-env { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 8px; }
+.llm-env-title { font-size: 11.5px; color: var(--text-tertiary); }
+.llm-env-row { display: grid; grid-template-columns: 72px 1fr; align-items: start; gap: 8px; }
+.llm-env-row > span { font-size: 12px; color: var(--text-secondary); line-height: 22px; }
+.llm-env-row > div { display: flex; flex-wrap: wrap; gap: 4px; }
+.llm-env-row code { padding: 2px 6px; border-radius: var(--radius-sm); background: var(--bg-sunken); border: 1px solid var(--border-subtle); font: 400 11px/16px var(--font-mono); color: var(--text-secondary); }
+.llm-env-empty { margin-top: 8px; font-size: 11.5px; color: var(--text-tertiary); }
+
+/* Notes: the file each note lives in, and the empty editor. */
+.note-file { font-size: 11px; color: var(--text-tertiary); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notes-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px; text-align: center; }
+.notes-empty > .icon { font-size: 22px; color: var(--text-tertiary); }
+.notes-empty b { font-size: 14px; font-weight: 500; }
+.notes-empty span { max-width: 340px; font-size: 12px; line-height: 1.5; color: var(--text-tertiary); }
+.notes-empty .btn { margin-top: 6px; }
+
+/* Model test: green answered, red failed, spinner while asking. */
+.mcat-btn.mtest.ok { color: var(--success); }
+.mcat-btn.mtest.err { color: var(--danger); }
+.mt-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--accent); animation: spin 800ms linear infinite; }
+.llm-status.ok { color: var(--success); }
+.llm-status.err { color: var(--danger); }
+/* Agent chips and their menu rows carry the agent's logo. */
+.glide-face { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-weight: inherit; }
+.glide-face span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.glide-row .alogo { flex: none; margin-right: 8px; }

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "XBLabs",
+  "version": "../package.json",
+  "identifier": "dev.xblabs.desktop",
+  "build": {
+    "frontendDist": "../app",
+    "beforeBuildCommand": "node src-tauri/prep.mjs",
+    "beforeDevCommand": { "script": "node src-tauri/prep.mjs", "wait": true }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico"],
+    "resources": { "runtime/": "runtime/" },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

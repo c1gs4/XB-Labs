@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Single place to read the loaded build. Stale-JS reports are otherwise impossible to
+     diagnose from a screenshot: `document.documentElement.dataset.build` answers it. -->
+<meta name="build" content="256">
+<link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/brand/favicon-180.png">
+  <title>XBLabs</title>
+<link rel="stylesheet" href="vendor/phosphor/regular/style.css">
+<link rel="stylesheet" href="vendor/phosphor/fill/style.css">
+<link rel="stylesheet" href="vendor/phosphor/bold/style.css">
+<!-- ?v bumped on every CSS change so the browser never serves a stale sheet -->
+<link rel="stylesheet" href="css/tokens.css?v=257">
+<link rel="stylesheet" href="css/app.css?v=335">
+<link rel="stylesheet" href="vendor/codicons/codicon.css?v=2">
+<link rel="stylesheet" href="css/session.css?v=325">
+<link rel="stylesheet" href="css/micro.css?v=285">
+<link rel="stylesheet" href="vendor/xterm/xterm.css?v=256">
+<style>
+  /* Opening splash: shown once per tab session, before any JS renders the app. */
+  #splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-base, #1d1d1d) 45%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); cursor: pointer; transition: opacity 500ms ease, visibility 500ms; }
+  #splash img { width: min(560px, 80vw); animation: splash-in 700ms cubic-bezier(.2,.8,.2,1) both; }
+  #splash.out { opacity: 0; visibility: hidden; }
+  #splash.out img { transform: scale(1.04); transition: transform 500ms ease; }
+  @keyframes splash-in { from { opacity: 0; transform: scale(.92) translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } }
+</style>
+</head>
+<body>
+<div id="splash" role="img" aria-label="xblabs"><img src="assets/brand/logo-text-white-anim.svg" alt=""></div>
+<script>
+  (function () {
+    var el = document.getElementById('splash'), seen;
+    try { seen = sessionStorage.getItem('xb-splash'); sessionStorage.setItem('xb-splash', '1'); } catch (e) {}
+    if (seen) { el.remove(); return; }
+    // Light theme gets the black logo; same rule as isLight() in app.js.
+    try {
+      var p = JSON.parse(localStorage.getItem('xblabs.prefs') || '{}') || {}, m = p.mode || (p.palette === 'paper' ? 'light' : 'dark');
+      if (m === 'light' || (m === 'system' && !matchMedia('(prefers-color-scheme: dark)').matches)) el.firstChild.src = 'assets/brand/logo-text-black-anim.svg';
+    } catch (e) {}
+    var still = matchMedia('(prefers-reduced-motion: reduce)').matches, ac = null;
+    // Synth SFX cued to logo-text-*-anim.svg (4.4s): look left 1.33s, right 1.97s, back 2.63s, jump 3.5s, land 3.93s.
+    // Browsers without a user gesture keep the context suspended, so it stays silent there.
+    if (!still) try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      var out = ac.createGain(); out.gain.value = 0.16; out.connect(ac.destination);
+      var tone = function (t, f0, f1, dur, type, vol) {
+        var o = ac.createOscillator(), g = ac.createGain(), at = ac.currentTime + t;
+        o.type = type; o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + Math.min(0.02, dur / 4));
+        g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        o.connect(g); g.connect(out); o.start(at); o.stop(at + dur + 0.05);
+      };
+      tone(0.05, 220, 440, 0.9, 'sine', 0.5); tone(0.12, 330, 660, 0.8, 'sine', 0.25);   // intro swell
+      tone(1.33, 900, 760, 0.09, 'triangle', 0.5);                                         // look left
+      tone(1.97, 1140, 960, 0.09, 'triangle', 0.5);                                        // look right
+      tone(2.63, 700, 620, 0.07, 'triangle', 0.35);                                        // back to center
+      tone(3.47, 260, 980, 0.22, 'sine', 0.6);                                             // jump
+      tone(3.93, 150, 55, 0.18, 'sine', 0.9);                                              // land thump
+      tone(3.95, 1319, 1319, 0.7, 'triangle', 0.3); tone(4.0, 1976, 1976, 0.6, 'sine', 0.2); // chime
+      if (ac.state === 'suspended') ac.resume().catch(function () {});
+    } catch (e) { ac = null; }
+    var done = function () { if (!el.isConnected || el.classList.contains('out')) return; el.classList.add('out'); setTimeout(function () { el.remove(); if (ac) ac.close().catch(function () {}); }, 520); };
+    el.addEventListener('click', done);
+    setTimeout(done, still ? 900 : 4400);
+  })();
+</script>
+<div class="app">
+  <header class="titlebar" id="titlebar"></header>
+  <div class="body">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sb-notch-slot"><button class="sb-notch" id="sb-notch" data-act="toggle-sidebar"><i class="icon ph ph-caret-left" aria-hidden="true"></i></button></div>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden></div>
+<div class="popover" id="popover" hidden></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- Same reason as the CSS: an unversioned <script src> is cached by heuristic and the
+     browser happily runs yesterday's renderer against today's markup. Bump both together. -->
+<script src="js/data.js?v=258"></script>
+<script type="module" src="js/choices.mjs?v=1"></script>
+<script src="js/app.js?v=457"></script>
+<script src="vendor/xterm/xterm.js?v=256"></script>
+<script src="vendor/xterm/addon-fit.js?v=256"></script>
+<script src="js/jobs.js?v=280"></script>
+<script src="js/town.js?v=268"></script>
+<script src="js/live.js?v=282"></script>
+<script src="js/micro.js?v=272"></script>
+<script src="js/sfx.js?v=256"></script>
+  <div id="railtip" class="railtip" hidden></div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+// Run: node server/markdown.check.mjs — chat Markdown formatting and HTML safety; no hub/model.
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+const source = readFileSync(new URL('../app/js/app.js', import.meta.url), 'utf8');
+const ctx = vm.createContext({});
+vm.runInContext(source.slice(source.indexOf('const esc ='), source.indexOf('\n', source.indexOf('const esc ='))), ctx);
+vm.runInContext(source.slice(source.indexOf('const FILE_PATH ='), source.indexOf('/* A note\'s preview')), ctx);
+vm.runInContext(source.slice(source.indexOf('function mdLite('), source.indexOf('/* A tool\'s glyph')), ctx);
+const md = (text) => { ctx.text = text; return vm.runInContext('mdLite(text)', ctx, { timeout: 1000 }); };
+assert.equal(md('# Heading\n## Second\n### Third'), '<h1>Heading</h1><h2>Second</h2><h3>Third</h3>');
+assert.equal(md('**bold** *italic* ~~gone~~ `**literal**`'), '<p><b>bold</b> <i>italic</i> <s>gone</s> <code>**literal**</code></p>');
+assert.equal(md('before\n# Heading\nafter'), '<p>before</p><h1>Heading</h1><p>after</p>');
+assert.match(md('- One\n- Two\n  - Child'), /<ul><li><p>One<\/p><\/li><li><p>Two<\/p><ul><li><p>Child/);
+assert.match(md('3. Three\n4. Four'), /^<ol start="3">/);
+assert.match(md('- [x] Done\n- [ ] Pending'), /disabled checked/);
+assert.match(md('> **Quote**\n\n---'), /<blockquote><p><b>Quote<\/b><\/p><\/blockquote><hr>/);
+assert.equal(md('```js\n# literal **code** <img>\n```'), '<pre class="md-code"><code class="language-js"># literal **code** &lt;img&gt;</code></pre>');
+assert.match(md('```\nunfinished'), /<code>unfinished<\/code>/);
+assert.match(md('| Name | Status |\n| --- | --- |\n| **A** | Done |'), /<th>Name<\/th>.*<td><b>A<\/b><\/td>/);
+assert.match(md('[Docs](https://example.com)'), /<a href="https:\/\/example.com" target="_blank" rel="noopener">Docs<\/a>/);
+assert.ok(!md('[Bad](javascript:alert(1))').includes('<a'));
+assert.ok(!md('<script>alert(1)</script>\n<img src=x onerror=alert(1)>').includes('<script>'));
+assert.ok(!md('[X](https://example.com/"onclick="bad)').includes('href="https://example.com/"'));
+assert.equal(md('C#\r\nplain'), '<p>C#<br>plain</p>');
+assert.equal(md('# C#\n## Title ##'), '<h1>C#</h1><h2>Title</h2>');
+assert.equal(md('__bold__ and _italic_'), '<p><b>bold</b> and <i>italic</i></p>');
+/* Pictures and files an agent names: marked here, turned into URLs per session by mdMedia. */
+assert.match(md('saved C:\\tmp\\cache\\pic.jpg done'), /<span class="md-img-ref" data-mdsrc="C:\\tmp\\cache\\pic\.jpg"><\/span><span class="md-imgpath">C:\\tmp\\cache\\pic\.jpg<\/span> done/);
+assert.match(md('at /tmp/a.png'), /data-mdsrc="\/tmp\/a\.png"/);
+assert.ok(!md('see https://x.com/a.png').includes('md-img-ref'), 'a web URL is a link, not a local picture');
+assert.match(md('![shot](out/s.png)'), /<span class="md-img-ref" data-mdsrc="out\/s\.png">shot<\/span>/);
+assert.match(md('[report](out/r.pdf)'), /<a class="md-file" data-mdhref="out\/r\.pdf">report<\/a>/);
+assert.match(md('open `server/index.mjs`'), /<a class="md-path" data-mdhref="server\/index\.mjs"><code>server\/index\.mjs<\/code><\/a>/);
+assert.equal(md('`npm test`'), '<p><code>npm test</code></p>', 'plain code is not a path');
+assert.ok(!md('![x](a.png"onerror="b)').includes('"onerror'), 'no attribute break-out');
+/* An answer that ends asking me to choose becomes buttons; an ordinary list does not. */
+const { askChoices, toolChoices, lastAsk } = await import('../app/js/choices.mjs');
+const pick = (t) => JSON.stringify(askChoices(t));
+assert.equal(pick('Which store?\n1. Redis\n2. SQLite'), '["Redis","SQLite"]');
+assert.equal(pick('Options:\n- A\n- B\n\nWhich one do you want?'), '["A","B"]');
+assert.equal(pick('Mau pakai database apa — pilih satu:\n\n1. SQLite\n2. Postgres'), '["SQLite","Postgres"]');
+assert.equal(pick('Done. Changes:\n- edited a\n- edited b'), 'null');
+assert.equal(pick('Pick?\n1. only one'), 'null');
+assert.deepEqual(toolChoices({ questions: [{ options: [{ label: 'Yes' }, { label: 'No' }] }] }), ['Yes', 'No']);
+assert.deepEqual(lastAsk([{ kind: 'text', data: { text: 'Which?\n1. a\n2. b' } }, { kind: 'done', data: {} }]), ['a', 'b'], 'a done event after the question still asks');
+assert.equal(lastAsk([{ kind: 'text', data: { text: 'Which?\n1. a\n2. b' } }, { kind: 'user', data: { text: 'a' } }]), null, 'answered');
+console.log('markdown.check ok — headings, emphasis, nested lists, tasks, quotes, tables, code, safe links/HTML, pictures and file paths');

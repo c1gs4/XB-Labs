@@ -1,0 +1,37 @@
+# deps
+node_modules/
+
+# rust / tauri build output
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# python
+__pycache__/
+*.pyc
+
+# local sqlite db + agent scratch (screenshots, pen backup)
+data/
+.hermes/
+
+# os / editor
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# secrets — never commit keys or .env
+.env
+.env.*
+*.pem
+
+# desktop build: runtime gathered by src-tauri/prep.mjs
+src-tauri/runtime/
+
+# local only: agent rules, design/plan docs, editor launch config
+.claude/
+CLAUDE.md
+claude-rules/
+DESIGN.md
+PLAN.md
+PRD*.pdf
+*.pen

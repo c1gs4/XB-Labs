@@ -1,0 +1,235 @@
+/* XBLabs — design tokens.
+
+   A theme is three things, not one: a ramp (color), a voice (type) and a shape (radius, rules).
+   Dark mode shows the dark theme the user picked; light mode the light theme they picked. `data-mode` and
+   `data-theme` on <html> carry both. Signatures that tokens cannot express live at the bottom of app.css. */
+
+@font-face{font-family:"Inter";font-weight:400;font-style:normal;font-display:swap;src:url("../fonts/inter-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-style:normal;font-display:swap;src:url("../fonts/inter-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-style:normal;font-display:swap;src:url("../fonts/inter-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Instrument Serif";font-weight:400;font-style:normal;font-display:swap;src:url("../fonts/instrument-serif-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Instrument Serif";font-weight:400;font-style:italic;font-display:swap;src:url("../fonts/instrument-serif-latin-400-italic.woff2") format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-style:normal;font-display:swap;src:url("../fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:500;font-style:normal;font-display:swap;src:url("../fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2")}
+
+:root {
+  color-scheme: dark;
+  --bg-base: #1d1d1d;
+  --bg-sunken: #161616;
+  --surface-1: #242424;
+  --surface-2: #2b2b2b;
+  --surface-3: #333333;
+  --border-subtle: #2e2e2e;
+  --border: #3a3a3a;
+  --border-strong: #4a4a4a;
+  --text-primary: #f2f2f0;
+  --text-secondary: #a8a8a4;
+  --text-tertiary: #8a8a84;
+  --text-disabled: #5c5c57;
+  --text-on-light: #1d1d1d;
+  --accent: #8ea2f0;
+  --accent-soft: #8ea2f024;
+  --on-accent: #141826;
+  --success: #3fb67a;
+  --success-soft: #3fb67a29;
+  --warning: #e8a23a;
+  --warning-soft: #e8a23a29;
+  --danger: #ef5b5b;
+  --danger-soft: #ef5b5b29;
+  --side-accent: #f08ac0;
+
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Instrument Serif", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-code: var(--font-mono);   /* user-picked in Settings → Appearance */
+
+  /* Voice: what headings and figures are set in. */
+  --font-head: var(--font-ui);
+  --head-size: 26px;
+  --head-weight: 600;
+  --head-track: -.01em;
+  --font-num: var(--font-ui);
+  --num-size: 28px;
+  --num-weight: 600;
+  --font-nav: var(--font-ui);
+  --nav-size: 13px;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-ctl: var(--radius-sm);   /* segments, chips */
+  --bar-w: 32px;
+  --bar-radius: 4px;
+  --card-border: var(--border-subtle);
+
+  --grad-avatar: linear-gradient(120deg, #4a5a8a 0%, #232a3d 100%);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, .45);
+  --scroll-thumb: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  --ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+:root[data-mode="light"] { color-scheme: light; --shadow-pop: 0 8px 24px rgba(20, 20, 28, .12); --on-accent: #ffffff; }
+
+/* Palettes. Root attribute is data-theme (NOT data-palette — data-palette is a click target on
+   the theme tiles, and a root-level duplicate would make every click match closest('[data-palette]')). */
+
+/* Every theme starts from the default voice and shape, so a theme tile rendered inside another
+   theme (Settings → Appearance) never inherits the surrounding theme's fonts or corners. */
+[data-theme] {
+  --font-head: var(--font-ui); --head-size: 26px; --head-weight: 600; --head-track: -.01em;
+  --font-num: var(--font-ui); --num-size: 28px; --num-weight: 600; --font-nav: var(--font-ui); --nav-size: 13px;
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-ctl: var(--radius-sm);
+  --bar-w: 32px; --bar-radius: 4px; --card-border: var(--border-subtle); --on-accent: #141826;
+}
+
+/* ---- Midnight · control room. Neutral graphite, one blue, Inter throughout. ---- */
+[data-theme="midnight"] {
+  --bg-base:#1d1d1d; --bg-sunken:#161616; --surface-1:#242424; --surface-2:#2b2b2b; --surface-3:#333333;
+  --border-subtle:#2e2e2e; --border:#3a3a3a; --border-strong:#4a4a4a;
+  --text-primary:#f2f2f0; --text-secondary:#a8a8a4; --text-tertiary:#8a8a84; --text-disabled:#5c5c57;
+  --text-on-light:#1d1d1d; --accent:#8ea2f0; --accent-soft:#8ea2f024; --on-accent:#141826; --side-accent:#e8a6c4;
+}
+
+/* ---- Nocturne (key: aubergine) · ink and brass. Indigo-black, champagne gold, serif
+   headings and figures, soft pill controls. Key kept so saved prefs still resolve. ---- */
+[data-theme="aubergine"] {
+  --bg-base:#15161f; --bg-sunken:#10111a; --surface-1:#1c1d29; --surface-2:#232434; --surface-3:#2c2d3f;
+  --border-subtle:#262838; --border:#333549; --border-strong:#44475e;
+  --text-primary:#f1efe8; --text-secondary:#aeacb8; --text-tertiary:#8c8a98; --text-disabled:#5d5c6a;
+  --text-on-light:#15161f; --accent:#d6b97c; --accent-soft:#d6b97c24; --on-accent:#15161f; --side-accent:#9fb0e8;
+  --font-head: var(--font-display); --head-size: 36px; --head-weight: 400; --head-track: 0;
+  --font-num: var(--font-display); --num-size: 36px; --num-weight: 400;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-ctl: 999px;
+  --bar-w: 18px; --bar-radius: 999px;
+}
+
+/* ---- Clay (key: lime) · warm studio. Warm grey ramp, clay-orange accent, serif headings
+   over Inter, generous soft corners. Key kept so saved prefs still resolve. ---- */
+[data-theme="lime"] {
+  --bg-base:#262624; --bg-sunken:#1f1e1d; --surface-1:#30302e; --surface-2:#383835; --surface-3:#42423e;
+  --border-subtle:#363532; --border:#44433f; --border-strong:#5a5853;
+  --text-primary:#faf9f5; --text-secondary:#c2c0b6; --text-tertiary:#9c9a92; --text-disabled:#6b6a64;
+  --text-on-light:#262624; --accent:#d97757; --accent-soft:#d9775726; --on-accent:#ffffff; --side-accent:#c2b49a;
+  --font-head: var(--font-display); --head-size: 34px; --head-weight: 400; --head-track: 0;
+  --font-num: var(--font-display); --num-size: 32px; --num-weight: 400;
+  --radius-sm: 8px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+  --bar-w: 20px; --bar-radius: 6px 6px 2px 2px;
+}
+
+/* ---- Fjord (key: teal) · glacier. Steel blue-black, ice accent, thin bars on a ruled grid,
+   ringed status dots. ---- */
+[data-theme="teal"] {
+  --bg-base:#111a20; --bg-sunken:#0c1419; --surface-1:#17222a; --surface-2:#1e2b34; --surface-3:#27363f;
+  --border-subtle:#1f2d36; --border:#2b3c47; --border-strong:#3b4f5c;
+  --text-primary:#edf3f6; --text-secondary:#a1b3bd; --text-tertiary:#80939e; --text-disabled:#52646e;
+  --text-on-light:#111a20; --accent:#86bfd2; --accent-soft:#86bfd224; --on-accent:#0c1419; --side-accent:#d4b0c9;
+  --head-size: 24px; --head-weight: 500; --head-track: 0;
+  --num-weight: 500;
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 10px; --radius-xl: 14px;
+  --bar-w: 10px; --bar-radius: 5px 5px 0 0;
+}
+
+/* ---- Bordeaux (key: espresso) · wine cellar. Wine-black, blush accent, serif headings,
+   mono figures, letterpress cards. ---- */
+[data-theme="espresso"] {
+  --bg-base:#1c1417; --bg-sunken:#160f12; --surface-1:#251a1e; --surface-2:#2e2126; --surface-3:#3a2a30;
+  --border-subtle:#33242a; --border:#432f37; --border-strong:#574049;
+  --text-primary:#f6eef0; --text-secondary:#bba6ac; --text-tertiary:#977f86; --text-disabled:#65535a;
+  --text-on-light:#1c1417; --accent:#e0a6a6; --accent-soft:#e0a6a624; --on-accent:#1c1417; --side-accent:#cdb68a;
+  --font-head: var(--font-display); --head-size: 32px; --head-weight: 400; --head-track: 0;
+  --font-num: var(--font-mono); --num-size: 24px; --num-weight: 500;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 10px;
+  --bar-w: 24px; --bar-radius: 2px;
+  --card-border: var(--border);
+}
+
+/* ---- Orchid · night garden. Cool violet-black, soft orchid, mint side note, Inter with
+   rounder corners. ---- */
+[data-theme="orchid"] {
+  --bg-base:#17151c; --bg-sunken:#121016; --surface-1:#1e1b24; --surface-2:#26222d; --surface-3:#2f2a38;
+  --border-subtle:#2a2632; --border:#383241; --border-strong:#4a4355;
+  --text-primary:#f3f0f6; --text-secondary:#b0a9b9; --text-tertiary:#8e8798; --text-disabled:#5e5868;
+  --text-on-light:#17151c; --accent:#c7a4dc; --accent-soft:#c7a4dc24; --on-accent:#17151c; --side-accent:#9fcdb9;
+  --head-weight: 500;
+  --radius-sm: 8px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 18px;
+  --bar-w: 20px; --bar-radius: 6px 6px 2px 2px;
+}
+
+/* ---- Paper · print. Ink on paper, serif titles, rules instead of fills. Light only,
+   like the rest of the light family below; the dark themes have no light ramp. ---- */
+[data-theme="paper"] {
+  --font-head: var(--font-display); --head-size: 38px; --head-weight: 400; --head-track: 0;
+  --font-num: var(--font-display); --num-size: 34px; --num-weight: 400;
+  --radius-sm: 2px; --radius-md: 4px; --radius-lg: 4px; --radius-xl: 6px; --radius-ctl: 2px;
+  --bar-w: 14px; --bar-radius: 0;
+  --card-border: var(--border);
+}
+[data-theme="paper"], [data-theme="paper"][data-mode="light"] {
+  color-scheme: light;
+  --bg-base:#f4f3ef; --bg-sunken:#eceae4; --surface-1:#fbfaf7; --surface-2:#f7f6f2; --surface-3:#eceae3;
+  --border-subtle:#e0ded7; --border:#d2cfc7; --border-strong:#b8b4aa;
+  --text-primary:#1d1d1b; --text-secondary:#5f5d57; --text-tertiary:#73716a; --text-disabled:#a8a59d;
+  --text-on-light:#faf9f5; --accent:#3f5a9a; --accent-soft:#3f5a9a1a; --on-accent:#ffffff; --side-accent:#b56a8a;
+  --shadow-pop: 0 1px 0 rgba(0,0,0,.04), 0 6px 16px rgba(20, 20, 28, .08);
+}
+
+/* ---- Light family beyond Paper. Each is a full ramp in a muted, low-chroma accent so long
+   sessions stay easy on the eyes; voice and shape stay default unless noted. ---- */
+[data-theme="porcelain"], [data-theme="sage"], [data-theme="rose"], [data-theme="lavender"], [data-theme="sand"] {
+  color-scheme: light; --on-accent: #ffffff;
+  --shadow-pop: 0 1px 2px rgba(20, 20, 28, .04), 0 8px 20px rgba(20, 20, 28, .08);
+}
+
+/* ---- Porcelain · gallery. Cool white, dusty blue, quiet. ---- */
+[data-theme="porcelain"] {
+  --bg-base:#f3f5f8; --bg-sunken:#e9edf2; --surface-1:#fbfcfd; --surface-2:#f6f8fa; --surface-3:#e8ecf1;
+  --border-subtle:#dde2e9; --border:#ccd3dc; --border-strong:#aeb7c3;
+  --text-primary:#1a1f27; --text-secondary:#555d69; --text-tertiary:#69717e; --text-disabled:#a3aab4;
+  --text-on-light:#fbfcfd; --accent:#4f6ea8; --accent-soft:#4f6ea81a; --side-accent:#c27b98;
+  --radius-sm: 8px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 18px;
+}
+
+/* ---- Sage · greenhouse. Soft green-grey paper, herb accent. ---- */
+[data-theme="sage"] {
+  --bg-base:#f2f4ef; --bg-sunken:#e8ebe3; --surface-1:#fafbf8; --surface-2:#f5f7f2; --surface-3:#e6eae0;
+  --border-subtle:#dbe0d4; --border:#c9d0c0; --border-strong:#aab4a0;
+  --text-primary:#1c211a; --text-secondary:#565e52; --text-tertiary:#687063; --text-disabled:#a2a99c;
+  --text-on-light:#fafbf8; --accent:#5a7a5c; --accent-soft:#5a7a5c1c; --side-accent:#b47e5c;
+  --head-weight: 500;
+}
+
+/* ---- Rosé · atelier. Blush paper, dusty rose, serif headings, pill controls. ---- */
+[data-theme="rose"] {
+  --bg-base:#f8f2f1; --bg-sunken:#f0e7e5; --surface-1:#fdfafa; --surface-2:#faf6f5; --surface-3:#efe5e3;
+  --border-subtle:#e8dcd9; --border:#dacbc7; --border-strong:#c0aca7;
+  --text-primary:#2a1f1f; --text-secondary:#6a5856; --text-tertiary:#7b6967; --text-disabled:#b3a3a0;
+  --text-on-light:#fdfafa; --accent:#a85d78; --accent-soft:#a85d781a; --side-accent:#7f72ad;
+  --font-head: var(--font-display); --head-size: 36px; --head-weight: 400; --head-track: 0;
+  --font-num: var(--font-display); --num-size: 34px; --num-weight: 400;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-ctl: 999px;
+  --bar-w: 16px; --bar-radius: 999px;
+}
+
+/* ---- Lavender · dusk. Lilac haze, violet ink, serif headings. ---- */
+[data-theme="lavender"] {
+  --bg-base:#f4f2f8; --bg-sunken:#eae7f1; --surface-1:#fbfafd; --surface-2:#f7f5fa; --surface-3:#e9e5f0;
+  --border-subtle:#dfdae9; --border:#cfc8dc; --border-strong:#b3aac4;
+  --text-primary:#1f1b29; --text-secondary:#5c5669; --text-tertiary:#6d677b; --text-disabled:#a8a2b5;
+  --text-on-light:#fbfafd; --accent:#6f60a8; --accent-soft:#6f60a81a; --side-accent:#c0789a;
+  --font-head: var(--font-display); --head-size: 34px; --head-weight: 400; --head-track: 0;
+  --radius-sm: 8px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 18px;
+}
+
+/* ---- Sand · dune. Warm linen, caramel accent, mono figures. ---- */
+[data-theme="sand"] {
+  --bg-base:#f6f1e9; --bg-sunken:#ede6db; --surface-1:#fcfaf6; --surface-2:#f9f5ef; --surface-3:#ece4d7;
+  --border-subtle:#e3dacb; --border:#d4c8b5; --border-strong:#baab93;
+  --text-primary:#24201a; --text-secondary:#635a4c; --text-tertiary:#746b5d; --text-disabled:#ada391;
+  --text-on-light:#fcfaf6; --accent:#985f38; --accent-soft:#985f381c; --side-accent:#5f8573;
+  --font-num: var(--font-mono); --num-size: 24px; --num-weight: 500;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 10px;
+  --card-border: var(--border);
+}

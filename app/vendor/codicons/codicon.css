@@ -1,0 +1,51 @@
+/* Codicons — the icon set Hermes Desktop renders its chat trace with.
+   Font copied verbatim from the desktop bundle (@vscode/codicons dist), MIT.
+   Only the glyphs this app uses are declared: 9 classes instead of 658. */
+@font-face {
+  font-family: "codicon";
+  src: url("codicon.ttf") format("truetype");
+  font-display: block;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.codicon {
+  font: normal normal normal 16px/1 codicon;
+  display: inline-block;
+  text-decoration: none;
+  text-rendering: auto;
+  text-align: center;
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  speak: never;
+}
+
+.codicon-lightbulb::before { content: "\ea61"; }   /* reasoning */
+.codicon-terminal::before { content: "\ea85"; }    /* commands */
+.codicon-file-code::before { content: "\eae9"; }   /* file reads */
+.codicon-run-all::before { content: "\eb9e"; }     /* grouped actions */
+.codicon-edit::before { content: "\ea73"; }        /* file edits */
+.codicon-tools::before { content: "\eb6d"; }       /* generic tool */
+.codicon-agent::before { content: "\ec67"; }       /* subagent / delegation */
+.codicon-check::before { content: "\eab2"; }
+.codicon-warning::before { content: "\ea6c"; }
+.codicon-sync::before { content: "\ea77"; }
+/* Tool-call glyphs in the bubble chat (codepoints from @vscode/codicons). */
+.codicon-search::before { content: "\ea6d"; }
+.codicon-globe::before { content: "\eb01"; }
+.codicon-folder-opened::before { content: "\eaf7"; }
+.codicon-checklist::before { content: "\eab3"; }
+.codicon-note::before { content: "\eb26"; }
+.codicon-book::before { content: "\eaa4"; }
+.codicon-code::before { content: "\eac4"; }
+.codicon-file-media::before { content: "\eaea"; }
+.codicon-git-commit::before { content: "\eafc"; }
+.codicon-database::before { content: "\eace"; }
+.codicon-mail::before { content: "\eb1c"; }
+.codicon-trash::before { content: "\ea81"; }
+.codicon-question::before { content: "\eb32"; }
+.codicon-history::before { content: "\ea82"; }
+.codicon-package::before { content: "\eb29"; }
+.codicon-eye::before { content: "\ea70"; }
