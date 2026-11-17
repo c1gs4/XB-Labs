@@ -172,8 +172,6 @@ const memText = (used, total) => {
   return `${g(used)}/${g(total)}`;
 };
 document.documentElement.dataset.build = document.querySelector('meta[name=build]')?.content || '?';
-/* Build goes in the window title so "is this the new build?" is answerable from a screenshot. */
-document.title = `XBLabs · build ${document.documentElement.dataset.build}`;
 console.info('[XBLabs] build', document.documentElement.dataset.build);
 
 const wsColor = (id) => (DB.workspaces.find((w) => w.id === id) || {}).color || 'var(--accent)';

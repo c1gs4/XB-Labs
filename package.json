@@ -1,6 +1,6 @@
 {
   "name": "xblabs",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "private": true,
   "description": "XBLabs \u2014 agent workspace and device fleet dashboard",
   "scripts": {
